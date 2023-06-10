@@ -20,7 +20,6 @@
 namespace self {
 	struct DB {
 		inline static sqlite::database LocalDB{ sqlite::database("./localDB.db")};
-		inline static sqlite::database PhiDB{ sqlite::database("./PhigrosInfo.db")};
 	};
 
 	struct Tools {
