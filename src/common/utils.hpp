@@ -13,6 +13,9 @@
 #include <unistd.h>
 #include <thread>
 #include <random>
+#include <functional>
+#include "http_util.hpp"
+#include "self_exception.hpp"
 
 #ifndef UTILS_HPP
 #define UTILS_HPP
@@ -69,6 +72,23 @@ namespace self {
 			return randomStr;
 		}
 	};
+	
+	inline static crow::response HandleResponseBody(std::function<std::string(void)> f) {
+		crow::response response;
+		response.set_header("Content-Type", "application/json");
+		try {
+			response.write(f());
+			response.code = 200;
+			return response;
+		} catch (const self::HTTPException& except) {
+			response.write(HTTPUtil::StatusCodeHandle::getSimpleJsonResult(500, except.what()).dump(2));
+			response.code = 500;
+		} catch (const std::exception& except) {
+			response.write(HTTPUtil::StatusCodeHandle::getSimpleJsonResult(500, except.what()).dump(2));
+			response.code = 500;
+		}
+		return response;
+	}
 }
 
 #endif // !UTILS_HPP
