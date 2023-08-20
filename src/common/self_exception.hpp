@@ -46,7 +46,7 @@ namespace self {
             return msg;
         }
 
-        virtual const char* what() const throw() {
+        virtual const char* what() const throw() override {
             return msg;
         }
     };
@@ -55,11 +55,19 @@ namespace self {
     private:
         std::string msg{};
         unsigned short code{ 500 };
+        json extra{};
     public:
-        HTTPException(std::string_view msg = "Severe HTTP Error", unsigned short code = 500) : std::runtime_error(msg.data()) {
+        explicit HTTPException(std::string_view msg = "Severe HTTP Error", unsigned short code = 500, const json& extra = json()) : std::runtime_error(msg.data()) {
             this->msg = msg;
             this->code = code;
+            this->extra = extra;
         };
+
+        HTTPException(unsigned short code) : HTTPException("", code) { };
+
+        HTTPException(unsigned short code, const std::string& msg) : HTTPException(msg, code) { };
+
+        HTTPException(unsigned short code, const json& extra) : HTTPException("", code, extra) { };
 
         const std::string& getMessage() const {
             return this->msg;
@@ -68,8 +76,12 @@ namespace self {
         const unsigned short getCode() const {
             return this->code;
         }
+        
+        json getJson() const {
+            return this->extra;
+        }
 
-        virtual const char* what() const throw() {
+        virtual const char* what() const throw() override {
             return this->msg.data();
         }
     };

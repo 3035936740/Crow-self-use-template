@@ -15,6 +15,12 @@
 #include "yaml-cpp/yaml.h"
 #include "fmt/format.h"
 #include <limits>
+#include <sqlite_modern_cpp.h>
+#include <Poco/Net/MediaType.h>
+#include <Poco/Net/MailMessage.h>
+#include <Poco/Net/SecureSMTPClientSession.h>
+#include <Poco/Net/NetException.h>
+#include "configuration/define.hpp"
 
 #ifndef CONFIG_HPP
 #define CONFIG_HPP  
@@ -28,35 +34,22 @@ namespace std {
 	using fmt::formatter;
 }
 
-#define Json nlohmann::json
+namespace Config {
+	static YAML::Node config_yaml{ YAML::LoadFile("./config.yaml") };
+};
 
-class Config final{
-private:
-	Config() = delete;
-	~Config() = delete;
-	Config(const Config&) = delete;
-	Config(Config&&) = delete;
-	Config& operator=(const Config&) = delete;
-	Config& operator=(Config&&) = delete;
-public:
-	inline static YAML::Node config_yaml{ YAML::LoadFile("./config.yaml")};
-	static void initialized(){
+namespace Global {
+	inline std::string resource_path{ Config::config_yaml["server"]["resource-path"].as<std::string>()};
+	inline std::string authorization_code{ Config::config_yaml["server"]["authorization-code"].as<std::string>() };
+};
 
+namespace self::DB {
+	static sqlite::database LocalDB{ sqlite::database(Config::config_yaml["db"]["sqlite"]["local"].as<std::string>()) };
+};
+
+namespace Config {
+	inline void initialized(void) {
 	}
-};
-
-class Global final {
-	friend class Config;
-private:
-	Global() = delete;
-	~Global() = delete;
-	Global(const Global&) = delete;
-	Global(Global&&) = delete;
-	Global& operator=(const Global&) = delete;
-	Global& operator=(Global&&) = delete;
-public:
-	inline static std::string resource_path{ Config::config_yaml["server"]["resource-path"].as<std::string>()};
-};
-
+}
 
 #endif

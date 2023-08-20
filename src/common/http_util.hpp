@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <exception>
+#include <stdexcept>
 #include <memory>
 #include <nlohmann/json.hpp>
 #include "jwt-cpp/jwt.h"
@@ -18,10 +20,8 @@
 
 using json = nlohmann::json;
 
-class HTTPUtil final{
-public:
-    class StatusCodeHandle final{
-    public:
+namespace HTTPUtil{
+    namespace StatusCodeHandle {
         enum status {
             NotExistThisStatusCode = 0,
             Continue = 100,
@@ -87,19 +87,23 @@ public:
             NetworkAuthenticationRequired = 511
         };
 
-        const inline static json getJsonResult(status state, std::string_view msg = "") {
+        const inline json getJsonResult(status state, std::string_view msg = "", const json& extra = json()) {
             auto now{ std::chrono::system_clock::now() };
             std::time_t t = std::chrono::system_clock::to_time_t(std::move(now));
             std::tm local_tm = *std::localtime(&t);
-            std::ostringstream oss;
+            std::ostringstream oss{};
             oss << std::put_time(&local_tm, "%Y-%m-%d %H:%M:%S");
 
-            json result;
+            json result{};
             result["date"] = oss.str();
             result["code"] = state;
 
             if (!msg.empty()) {
                 result["detail"] = msg;
+            }
+            
+            if (!extra.empty()) {
+                result["info"] = extra;
             }
 
             switch (state)
@@ -231,7 +235,11 @@ public:
             return result;
         };
 
-        constexpr inline static status getStatus(int code) {
+        const inline json getJsonResult(status state, const json& extra) {
+            return getJsonResult(state, "", extra);
+        }
+
+        constexpr inline status getStatus(int code) {
             switch (code)
             {
             case Continue:
@@ -361,19 +369,11 @@ public:
             }
         };
 
-        const inline static json getSimpleJsonResult(int code, std::string_view msg = "") {
-            return getJsonResult(getStatus(code), msg);
+        const inline json getSimpleJsonResult(int code, std::string_view msg = "",const json& extra = json()) {
+            return getJsonResult(getStatus(code), msg, extra);
         };
-    private:
-        StatusCodeHandle(void) = delete;
-        ~StatusCodeHandle(void) = delete;
-        StatusCodeHandle(const StatusCodeHandle&) = delete;
-        StatusCodeHandle(StatusCodeHandle&&) = delete;
-        StatusCodeHandle& operator=(const StatusCodeHandle&) = delete;
-        StatusCodeHandle& operator=(StatusCodeHandle&&) = delete;
+    
     };
-private:
-
 };
 
 #endif

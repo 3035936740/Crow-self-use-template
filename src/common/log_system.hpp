@@ -10,7 +10,6 @@
 
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/daily_file_sink.h"
-#include "configuration/config.hpp"
 #include <iostream>
 
 #ifndef LOG_SYSTEM_HPP
